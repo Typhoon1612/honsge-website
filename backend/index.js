@@ -7,26 +7,34 @@ const app = express();
 const db = mysql.createConnection({
     host:"localhost",
     user:"root",
-    password:"SYW432021#",
+    password:"123456",
     database:"honsge_database"
 })
 
 app.use(express.json());
 
-app.use(cors());
+app.use(cors({
+  origin: "http://localhost:5173",  // Vite's frontend URL
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  credentials: true
+}));
 
 app.post("/CheckLoginInfo", (req, res) => {
     const phoneNumber = req.body.phoneNumber;
     const password = req.body.password;
 
-    const query = "SELECT COUNT(*) AS Count, customer_id FROM login_info WHERE phone_number = ? AND customer_password = ?";
+    const query = "SELECT customer_id FROM login_info WHERE phone_number = ? AND customer_password = ?";
 
     db.query(query, [phoneNumber, password], (err, data) => {
         if (err) throw err;
-        console.log(data);
-        res.json({message: data[0].Count > 0 ? "Data Exist" : "Data doesn't Exist", customer_id: data[0].customer_id}); 
-    }); 
-})
+        
+        if (data.length > 0) {
+            res.json({ message: "Data Exist", customer_id: data[0].customer_id });
+        } else {
+            res.json({ message: "Data doesn't Exist", customer_id: null });
+        }
+    });
+});
 
 app.post("/FetchCustomerInfo", (req, res)=>{
     const customer_id = req.body.customerID;
